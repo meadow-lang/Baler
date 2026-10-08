@@ -1,15 +1,15 @@
 # baler
 
 Wrap, fill, indent and dedent text for a terminal, in
-[Meadow](https://github.com/mcdearman/meadow).
+[Meadow](https://github.com/meadow-lang/meadow).
 
 This package is a port of Rust's [`textwrap`](https://github.com/mgeisler/textwrap)
 0.16.2 with its default features:
 
-- widths come from [unicodeWidth](https://github.com/mcdearman/UnicodeWidth),
+- widths come from [unicodeWidth](https://github.com/meadow-lang/UnicodeWidth),
   so wide CJK characters and emoji are measured correctly and colour codes are
   ignored;
-- words end where [unicodeLinebreak](https://github.com/mcdearman/UnicodeLinebreak)
+- words end where [unicodeLinebreak](https://github.com/meadow-lang/UnicodeLinebreak)
   (UAX #14) says a line may break;
 - the default algorithm is *optimal fit*, which balances line lengths across a
   whole paragraph, like TeX does, instead of filling each line greedily.
@@ -17,7 +17,7 @@ This package is a port of Rust's [`textwrap`](https://github.com/mgeisler/textwr
 ## Install
 
 ```sh
-meadow add mcdearman/Baler
+meadow add meadow-lang/Baler
 ```
 
 ## Use
