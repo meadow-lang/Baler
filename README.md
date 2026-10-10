@@ -14,6 +14,14 @@ This package is a port of Rust's [`textwrap`](https://github.com/mgeisler/textwr
 - the default algorithm is *optimal fit*, which balances line lengths across a
   whole paragraph, like TeX does, instead of filling each line greedily.
 
+## AI disclosure
+
+Baler is written with AI coding agents: Anthropic's Claude, through Claude Code.
+Most of the code, the tests, the documentation and the commit messages in this
+repository were written by an agent, under the direction of the project's
+author, who decides the design and what goes in. Read it, and rely on it, with
+that in mind.
+
 ## Install
 
 ```sh
