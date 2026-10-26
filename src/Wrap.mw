@@ -34,8 +34,7 @@ fun wrapSlow line (opts : Options) lines =
   let subsequentWidth = saturatingSub opts.width (displayWidth opts.subsequentIndent) in
   let split = splitWords opts.wordSplitter (findWords opts.wordSeparator line) in
   let words =
-    if opts.breakWords
-    then
+    if opts.breakWords then
       let broken = breakWords subsequentWidth split in
       -- Without a first empty word, the first word would always go on the
       -- first line; but it was broken for the subsequent width, which may
@@ -45,38 +44,30 @@ fun wrapSlow line (opts : Options) lines =
   in
   let ranges = lineRanges opts.wrapAlgorithm words [initialWidth, subsequentWidth] in
   let rec emit k idx out =
-    if k >= V.len ranges
-    then out
+    if k >= V.len ranges then out
     else
       match V.getOr (0, 0) ranges k with
       | (from, to) ->
-          if from >= to
-          then emit (k + 1) idx (V.pushBack out "")
+          if from >= to then emit (k + 1) idx (V.pushBack out "")
           else
             let last = wordAt words (to - 1) in
             let len =
-              V.foldl
-              (\acc j -> acc + wordBytes (wordAt words j))
-              0
-              (V.range from to)
-              - byteLength last.whitespace
+              V.foldl (\acc j -> acc + wordBytes (wordAt words j)) 0 (V.range from to)
+                - byteLength last.whitespace
             in
             let indent =
-              if V.isEmpty out and not (isEmpty opts.initialIndent)
-              then opts.initialIndent
-              else if not (V.isEmpty out) and not (isEmpty opts.subsequentIndent)
-              then opts.subsequentIndent
+              if V.isEmpty out and not (isEmpty opts.initialIndent) then opts.initialIndent
+              else if not (V.isEmpty out) and not (isEmpty opts.subsequentIndent) then
+                opts.subsequentIndent
               else ""
             in
             let text = indent ++ slice line idx (idx + len) ++ last.penalty in
             emit (k + 1) (idx + len + byteLength last.whitespace) (V.pushBack out text)
-  in
-  emit 0 0 lines
+  in emit 0 0 lines
 
 fun wrapLine (opts : Options) lines line =
   let indent = if V.isEmpty lines then opts.initialIndent else opts.subsequentIndent in
-  if byteLength line < opts.width and isEmpty indent
-  then V.pushBack lines (trimEndSpaces line)
+  if byteLength line < opts.width and isEmpty indent then V.pushBack lines (trimEndSpaces line)
   else wrapSlow line opts lines
 
 -- `text` as lines no wider than `opts.width` columns, where the words allow.
@@ -86,44 +77,37 @@ fun wrapLine (opts : Options) lines line =
 
 -- `wrap`, joined up with `opts.lineEnding`.
 @pub fun fill (opts : Options) text =
-  if byteLength text < opts.width and not (contains "\n" text) and isEmpty opts.initialIndent
-  then trimEndSpaces text
+  if byteLength text < opts.width and not (contains "\n" text) and isEmpty opts.initialIndent then
+    trimEndSpaces text
   else joinWith (lineEndingText opts.lineEnding) (wrap opts text)
 
 -- `text` filled to `width` columns by turning spaces into line breaks, so
 -- that it keeps its length in bytes. Only ASCII spaces separate words, and
 -- the lines are filled greedily.
 @pub fun fillInplace width text =
-  let lineIndices = \acc line ->
-    match acc with
-    | (offset, indices) ->
-        let words = findWords AsciiSpace line in
-        let ranges = wrapFirstFit (V.map fragment words) [toFloat width] in
-        let rec go k lineOffset idxs =
-          if k >= V.len ranges - 1
-          then idxs
-          else
-            match V.getOr (0, 0) ranges k with
-            | (from, to) ->
-                let lineLen =
-                  V.foldl
-                  (\a j -> a + wordBytes (wordAt words j))
-                  0
-                  (V.range from to)
-                in
-                go (k + 1) (lineOffset + lineLen) (V.pushBack idxs (lineOffset + lineLen - 1))
-        in
-        (offset + byteLength line + 1, go 0 offset indices)
+  let lineIndices =
+    \acc line ->
+      match acc with
+      | (offset, indices) ->
+          let words = findWords AsciiSpace line in
+          let ranges = wrapFirstFit (V.map fragment words) [toFloat width] in
+          let rec go k lineOffset idxs =
+            if k >= V.len ranges - 1 then idxs
+            else
+              match V.getOr (0, 0) ranges k with
+              | (from, to) ->
+                  let lineLen =
+                    V.foldl (\a j -> a + wordBytes (wordAt words j)) 0 (V.range from to)
+                  in go (k + 1) (lineOffset + lineLen) (V.pushBack idxs (lineOffset + lineLen - 1))
+          in (offset + byteLength line + 1, go 0 offset indices)
   in
   let indices = snd (V.foldl lineIndices (0, V.empty) (split "\n" text)) in
   let rec rebuild k from pieces =
-    if k >= V.len indices
-    then V.pushBack pieces (drop text from)
+    if k >= V.len indices then V.pushBack pieces (drop text from)
     else
       let at = V.getOr 0 indices k in
       rebuild (k + 1) (at + 1) (V.pushBack (V.pushBack pieces (slice text from at)) "\n")
-  in
-  concatStrings (V.toArray (rebuild 0 0 V.empty))
+  in concatStrings (V.toArray (rebuild 0 0 V.empty))
 
 -- --- unfilling --------------------------------------------------------------------------
 
@@ -136,15 +120,12 @@ fun isPrefixChar c =
 fun nonEmptyLines text =
   let rec go rest acc =
     let lf = find "\n" rest 0 in
-    if lf < 0
-    then (if isEmpty rest then acc else V.pushBack acc (rest, None))
-    else if lf == 0 or (lf == 1 and byteAt rest 0 == 13)
-    then go (drop rest (lf + 1)) acc
-    else if byteAt rest (lf - 1) == 13
-    then go (drop rest (lf + 1)) (V.pushBack acc (slice rest 0 (lf - 1), Just CRLF))
+    if lf < 0 then (if isEmpty rest then acc else V.pushBack acc (rest, None))
+    else if lf == 0 or (lf == 1 and byteAt rest 0 == 13) then go (drop rest (lf + 1)) acc
+    else if byteAt rest (lf - 1) == 13 then
+      go (drop rest (lf + 1)) (V.pushBack acc (slice rest 0 (lf - 1), Just CRLF))
     else go (drop rest (lf + 1)) (V.pushBack acc (slice rest 0 lf, Just LF))
-  in
-  go text V.empty
+  in go text V.empty
 
 -- The longest prefix of `prefix` that `line`'s prefix agrees with, or the
 -- shorter of the two.
@@ -152,10 +133,8 @@ fun commonIndent prefix current =
   let a = indexed prefix in
   let b = indexed current in
   let rec go i =
-    if i >= arrayLen a or i >= arrayLen b
-    then current
-    else if snd (arrayGet a i) != snd (arrayGet b i)
-    then slice prefix 0 (fst (arrayGet a i))
+    if i >= arrayLen a or i >= arrayLen b then current
+    else if snd (arrayGet a i) != snd (arrayGet b i) then slice prefix 0 (fst (arrayGet a i))
     else go (i + 1)
   in
   let shared = go 0 in
@@ -175,50 +154,42 @@ fun commonIndent prefix current =
             let rest = trimStartBy isPrefixChar line in
             let prefix = slice line 0 (byteLength line - byteLength rest) in
             let width2 = if displayWidth line > width then displayWidth line else width in
-            if k == 0
-            then (width2, prefix, subsequent)
-            else if k == 1
-            then (width2, initial, prefix)
+            if k == 0 then (width2, prefix, subsequent)
+            else if k == 1 then (width2, initial, prefix)
             else (width2, initial, commonIndent prefix subsequent))
       (0, "", "")
       (V.range 0 (V.len ls))
-  in
-  match found with
-  | (width, initial, subsequent) ->
-      let pieces = nonEmptyLines text in
-      let body =
-        V.map
-        (\k ->
-          let line = fst (V.getOr ("", None) pieces k) in
-          if k == 0
-          then drop line (byteLength initial)
-          else " " ++ drop line (byteLength subsequent))
-        (V.range 0 (V.len pieces))
-      in
-      let detected =
-        V.foldl
-        (\d p ->
-          match (d, snd p) with
-          | (None, Just e) -> Just e
-          | (Just CRLF, Just LF) -> Just LF
-          | _ -> d)
-        None
-        pieces
-      in
-      let ending =
-        match detected with
-        | Just e -> if endsWith (lineEndingText e) text then lineEndingText e else ""
-        | None -> ""
-      in
-      let unfilled = concatStrings (V.toArray (V.pushBack body ending)) in
-      let lineEnding =
-        match detected with
-        | Just e -> e
-        | None -> LF
-      in
-      let base = options width in
-      let found = { base | initialIndent = initial, subsequentIndent = subsequent } in
-      (unfilled, { found | lineEnding = lineEnding })
+  in match found with
+     | (width, initial, subsequent) ->
+         let pieces = nonEmptyLines text in
+         let body =
+           V.map
+             (\k ->
+               let line = fst (V.getOr ("", None) pieces k) in
+               if k == 0 then drop line (byteLength initial)
+               else " " ++ drop line (byteLength subsequent))
+             (V.range 0 (V.len pieces))
+         in
+         let detected =
+           V.foldl
+             (\d p ->
+               match (d, snd p) with
+               | (None, Just e) -> Just e
+               | (Just CRLF, Just LF) -> Just LF
+               | _ -> d)
+             None
+             pieces
+         in
+         let ending =
+           match detected with
+           | Just e -> if endsWith (lineEndingText e) text then lineEndingText e else ""
+           | None -> ""
+         in
+         let unfilled = concatStrings (V.toArray (V.pushBack body ending)) in
+         let lineEnding = match detected with | Just e -> e | None -> LF in
+         let base = options width in
+         let found = { base | initialIndent = initial, subsequentIndent = subsequent } in
+         (unfilled, { found | lineEnding = lineEnding })
 
 -- `filledText` filled again with `opts`, keeping the indents it had.
 @pub fun refill (opts : Options) filledText =
@@ -257,9 +228,7 @@ fun commonIndent prefix current =
               match V.get wrapped (lineNo + col * perColumn) with
               | Just s -> s ++ spaces (columnWidth - displayWidth s)
               | None -> spaces columnWidth
-            in
-            cell ++ (if col == columns - 1 then lastPadding else middleGap))
+            in cell ++ (if col == columns - 1 then lastPadding else middleGap))
           (V.range 0 columns)
-      in
-      leftGap ++ concatStrings (V.toArray cells) ++ rightGap)
+      in leftGap ++ concatStrings (V.toArray cells) ++ rightGap)
     (V.range 0 perColumn)

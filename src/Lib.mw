@@ -24,15 +24,8 @@ mod Cases
 mod Tests
 
 @pub use Baler.Options (
-  Options,
-  options,
-  LineEnding,
-  lineEndingText,
-  WordSeparator,
-  WordSplitter,
-  WrapAlgorithm,
-  Penalties,
-  defaultPenalties
+  Options, options, LineEnding, lineEndingText, WordSeparator, WordSplitter, WrapAlgorithm,
+  Penalties, defaultPenalties
 )
 @pub use Baler.Options.LineEnding.*
 @pub use Baler.Options.WordSeparator.*

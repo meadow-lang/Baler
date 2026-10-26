@@ -15,22 +15,18 @@ fun pair s i = digit s i * 64 + digit s (i + 1)
 fun codePoint s i = pair s i * 4096 + pair s (i + 2)
 
 fun inRanges table cp lo hi =
-  if lo >= hi
-  then False
+  if lo >= hi then False
   else
     let mid = (lo + hi) / 2 in
     let at = mid * 8 in
-    if cp < codePoint table at
-    then inRanges table cp lo mid
-    else if cp > codePoint table (at + 4)
-    then inRanges table cp (mid + 1) hi
+    if cp < codePoint table at then inRanges table cp lo mid
+    else if cp > codePoint table (at + 4) then inRanges table cp (mid + 1) hi
     else True
 
 -- Rust's `char::is_alphanumeric`.
 @pub(pkg) fun isAlphanumeric c =
   let cp = charCode c in
-  if cp < 128
-  then (cp >= 48 and cp <= 57) or (cp >= 65 and cp <= 90) or (cp >= 97 and cp <= 122)
+  if cp < 128 then (cp >= 48 and cp <= 57) or (cp >= 65 and cp <= 90) or (cp >= 97 and cp <= 122)
   else inRanges alphanumeric cp 0 (stringByteLength alphanumeric / 8)
 
 -- Rust's `char::is_whitespace`: the White_Space property.
@@ -51,13 +47,7 @@ fun inRanges table cp lo hi =
 -- How many bytes UTF-8 takes for `c`.
 @pub(pkg) fun utf8Len c =
   let cp = charCode c in
-  if cp < 0x80
-  then 1
-  else if cp < 0x800
-  then 2
-  else if cp < 0x10000
-  then 3
-  else 4
+  if cp < 0x80 then 1 else if cp < 0x800 then 2 else if cp < 0x10000 then 3 else 4
 
 @pub(pkg) fun byteLength s = stringByteLength s
 
@@ -74,13 +64,11 @@ fun inRanges table cp lo hi =
 @pub(pkg) fun indexed s =
   let cs = stringToChars s in
   let rec go i at acc =
-    if i >= arrayLen cs
-    then acc
+    if i >= arrayLen cs then acc
     else
       let c = arrayGet cs i in
       go (i + 1) (at + utf8Len c) (V.pushBack acc (at, c))
-  in
-  V.toArray (go 0 0 V.empty)
+  in V.toArray (go 0 0 V.empty)
 
 -- Whether `s` has `needle` at byte `at`.
 @pub(pkg) fun hasAt needle s at =
@@ -102,18 +90,15 @@ fun inRanges table cp lo hi =
   let n = stringByteLength sep in
   let rec go from acc =
     let at = find sep s from in
-    if at < 0
-    then V.pushBack acc (drop s from)
-    else go (at + n) (V.pushBack acc (slice s from at))
-  in
-  go 0 V.empty
+    if at < 0 then V.pushBack acc (drop s from) else go (at + n) (V.pushBack acc (slice s from at))
+  in go 0 V.empty
 
 -- Rust's `str::split_terminator`: `split`, without the empty piece after a
 -- final separator.
 @pub(pkg) fun splitTerminator sep s =
   let pieces = split sep s in
-  if V.len pieces > 0 and V.getOr "x" pieces (V.len pieces - 1) == ""
-  then V.take pieces (V.len pieces - 1)
+  if V.len pieces > 0 and V.getOr "x" pieces (V.len pieces - 1) == "" then
+    V.take pieces (V.len pieces - 1)
   else pieces
 
 -- Rust's `str::lines`: split at `\n`, with a `\r` just before one taken off,
@@ -125,8 +110,7 @@ fun inRanges table cp lo hi =
   V.map
     (\k ->
       let line = V.getOr "" pieces k in
-      if (k < last or ended) and endsWith "\r" line
-      then slice line 0 (stringByteLength line - 1)
+      if (k < last or ended) and endsWith "\r" line then slice line 0 (stringByteLength line - 1)
       else line)
     (V.range 0 (V.len pieces))
 
@@ -134,25 +118,21 @@ fun inRanges table cp lo hi =
 @pub(pkg) fun trimEndBy dropIt s =
   let cs = indexed s in
   let rec go i =
-    if i < 0
-    then 0
+    if i < 0 then 0
     else
       match arrayGet cs i with
       | (at, c) -> if dropIt c then go (i - 1) else at + utf8Len c
-  in
-  slice s 0 (go (arrayLen cs - 1))
+  in slice s 0 (go (arrayLen cs - 1))
 
 -- `s` without the characters from its start that `drop` says to.
 @pub(pkg) fun trimStartBy dropIt s =
   let cs = indexed s in
   let rec go i =
-    if i >= arrayLen cs
-    then stringByteLength s
+    if i >= arrayLen cs then stringByteLength s
     else
       match arrayGet cs i with
       | (at, c) -> if dropIt c then go (i + 1) else at
-  in
-  drop s (go 0)
+  in drop s (go 0)
 
 -- Rust's `trim_end_matches(' ')`, bytewise since a space is one byte.
 @pub(pkg) fun trimEndSpaces s =

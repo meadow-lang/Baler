@@ -26,10 +26,8 @@ fun shorten prefix line =
   let a = indexed line in
   let b = indexed prefix in
   let rec go i =
-    if i >= arrayLen a or i >= arrayLen b
-    then byteLength line
-    else if snd (arrayGet a i) != snd (arrayGet b i)
-    then fst (arrayGet a i)
+    if i >= arrayLen a or i >= arrayLen b then byteLength line
+    else if snd (arrayGet a i) != snd (arrayGet b i) then fst (arrayGet a i)
     else go (i + 1)
   in
   let at = go 0 in
@@ -42,8 +40,7 @@ fun hasText line = anyChar (\c -> not (isWhitespace c)) line
 @pub fun dedent s =
   let ls = lines s in
   let rec findFirst k =
-    if k >= V.len ls
-    then (k, "")
+    if k >= V.len ls then (k, "")
     else
       match leading (V.getOr "" ls k) with
       | Just p -> (k + 1, p)
@@ -55,9 +52,7 @@ fun hasText line = anyChar (\c -> not (isWhitespace c)) line
   in
   let dropPrefix = \line -> drop line (byteLength prefix) in
   let out =
-    V.map
-      (\line -> if startsWith prefix line and hasText line then dropPrefix line else "")
-      ls
+    V.map (\line -> if startsWith prefix line and hasText line then dropPrefix line else "") ls
   in
   let body = concatStrings (V.toArray (V.map (\l -> l ++ "\n") out)) in
   if endsWith "\n" body and not (endsWith "\n" s) then slice body 0 (byteLength body - 1) else body
