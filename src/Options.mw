@@ -15,8 +15,7 @@ use LineEnding.*
 
 -- How to find the words in a line.
 @pub data WordSeparator
-  = -- Words end at ASCII spaces, and only there.
-  AsciiSpace
+  = AsciiSpace -- Words end at ASCII spaces, and only there.
   -- Words end where UAX #14 allows a line to break: after spaces, and between
   -- ideographs, say. Breaks at a hyphen are left to the `WordSplitter`.
   | UnicodeBreakProperties
@@ -26,8 +25,7 @@ use LineEnding.*
 
 -- How to find places inside a word where it may be split across lines.
 @pub data WordSplitter
-  = -- Nowhere.
-  NoHyphenation
+  = NoHyphenation -- Nowhere.
   -- After a hyphen with letters or digits on both sides.
   | HyphenSplitter
   -- At the byte offsets this function gives.
@@ -61,8 +59,7 @@ use WordSplitter.*
 
 -- How to choose where lines end.
 @pub data WrapAlgorithm
-  = -- Fill each line as far as it will go.
-  FirstFit
+  = FirstFit -- Fill each line as far as it will go.
   -- Choose the breaks that balance the lines best, by the penalties given.
   | OptimalFit Penalties
 
