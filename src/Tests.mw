@@ -46,13 +46,11 @@ fun str i =
 fun strs i =
   let count = fst (num i 3) in
   let rec go k at acc =
-    if k >= count
-    then (acc, at)
+    if k >= count then (acc, at)
     else
       let s = str at in
       go (k + 1) (snd s) (V.pushBack acc (fst s))
-  in
-  go 0 (i + 3) V.empty
+  in go 0 (i + 3) V.empty
 
 @cfg(test)
 def otherPenalties =
@@ -74,24 +72,22 @@ fun setting i =
   let flags = snd subsequent in
   let flag k = fst (num (flags + k) 1) in
   let algorithm =
-    if flag 1 == 0
-    then FirstFit
-    else if flag 1 == 1
-    then OptimalFit defaultPenalties
+    if flag 1 == 0 then FirstFit
+    else if flag 1 == 1 then OptimalFit defaultPenalties
     else OptimalFit otherPenalties
   in
   let base = options (fst width) in
-  let opts = {
-  base |
-    lineEnding = if fst crlf == 1 then CRLF else LF,
-    initialIndent = fst initial,
-    subsequentIndent = fst subsequent,
-    breakWords = flag 0 == 1,
-    wrapAlgorithm = algorithm,
-    wordSeparator = if flag 2 == 1 then UnicodeBreakProperties else AsciiSpace,
-    wordSplitter = if flag 3 == 1 then HyphenSplitter else NoHyphenation
-  } in
-  (opts, flags + 4)
+  let opts =
+    {
+      base | lineEnding = if fst crlf == 1 then CRLF else LF,
+      initialIndent = fst initial,
+      subsequentIndent = fst subsequent,
+      breakWords = flag 0 == 1,
+      wrapAlgorithm = algorithm,
+      wordSeparator = if flag 2 == 1 then UnicodeBreakProperties else AsciiSpace,
+      wordSplitter = if flag 3 == 1 then HyphenSplitter else NoHyphenation
+    }
+  in (opts, flags + 4)
 
 -- One case at `i`: `(input, expected, actual)` and where it ends.
 @cfg(test)
@@ -100,29 +96,24 @@ fun runCase i =
   let t = str (i + 1) in
   let text = fst t in
   let at = snd t in
-  if kind == 0
-  then
+  if kind == 0 then
     let s = setting at in
     let wrapped = strs (snd s) in
     let filled = str (snd wrapped) in
     let opts = fst s in
     (("wrap/fill", text), (fst wrapped, fst filled), (wrap opts text, fill opts text), snd filled)
-  else if kind == 1
-  then
+  else if kind == 1 then
     let w = num at 2 in
     let filled = str (snd w) in
     (("fillInplace", text), ([], fst filled), ([], fillInplace (fst w) text), snd filled)
-  else if kind == 2
-  then
+  else if kind == 2 then
     let prefix = str at in
     let result = str (snd prefix) in
     (("indent " ++ fst prefix, text), ([], fst result), ([], indent (fst prefix) text), snd result)
-  else if kind == 3
-  then
+  else if kind == 3 then
     let result = str at in
     (("dedent", text), ([], fst result), ([], dedent text), snd result)
-  else if kind == 4
-  then
+  else if kind == 4 then
     let unfilled = str at in
     let w = num (snd unfilled) 3 in
     let ini = num (snd w) 2 in
@@ -135,13 +126,11 @@ fun runCase i =
     let indents = "${stringByteLength o.initialIndent} ${stringByteLength o.subsequentIndent}" in
     let summary = "${o.width} ${indents} ${crlfFound}" in
     (("unfill", text), (expected, ""), ([fst got, summary], ""), snd crlf)
-  else if kind == 5
-  then
+  else if kind == 5 then
     let s = setting at in
     let refilled = str (snd s) in
     (("refill", text), ([], fst refilled), ([], refill (fst s) text), snd refilled)
-  else if kind == 6
-  then
+  else if kind == 6 then
     let s = setting at in
     let cols = num (snd s) 1 in
     let left = str (snd cols) in
@@ -156,8 +145,7 @@ fun runCase i =
 
 @cfg(test)
 fun check i bad =
-  if i >= stringByteLength cases
-  then bad
+  if i >= stringByteLength cases then bad
   else
     match runCase i with
     | (input, expected, got, next) ->
